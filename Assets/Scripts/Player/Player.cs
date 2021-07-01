@@ -7,7 +7,7 @@ public class Player : MonoBehaviour
 
     public int Score => _score;
     public event UnityAction<int> ScoreChanged;
-    public event UnityAction Died;
+    public event UnityAction PlayerDying;
 
     private void Awake()
     {
@@ -29,7 +29,7 @@ public class Player : MonoBehaviour
     {
         if (collision.collider.TryGetComponent<Obstacle>(out Obstacle obstacle))
         {
-            Died?.Invoke();
+            PlayerDying?.Invoke();
         }
     }
 }

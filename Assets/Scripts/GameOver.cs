@@ -15,15 +15,15 @@ public class GameOver : MonoBehaviour
 
     private void OnEnable()
     {
-        _player.Died += OnPlayerDied;
+        _player.PlayerDying += OnPlayerDying;
     }
 
     private void OnDisable()
     {
-        _player.Died -= OnPlayerDied;
+        _player.PlayerDying -= OnPlayerDying;
     }
 
-    private void OnPlayerDied()
+    private void OnPlayerDying()
     {
         StartCoroutine(SlowDownTime());
     }
