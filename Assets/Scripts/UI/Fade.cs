@@ -23,7 +23,7 @@ public class Fade : MonoBehaviour
 
     public void PlayTransitionAnimation(int sceneIndex)
     {
-        _canvas.SetTrigger("Finished");
+        _canvas.SetTrigger(AnimatorFade.Params.Finished);
 
         _sceneIndex = sceneIndex;
     }

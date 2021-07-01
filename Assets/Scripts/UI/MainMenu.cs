@@ -44,7 +44,7 @@ public class MainMenu : MonoBehaviour
     private void OnCreditButtonClick()
     {
         _menu.blocksRaycasts = false;
-        _panel.Play("RaisePanel");
+        _panel.Play(AnimatorCredits.States.RaisePanel);
     }
 
     private void OnExitButtonClick()
