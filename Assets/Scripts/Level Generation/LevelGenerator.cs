@@ -1,94 +1,108 @@
+using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
 
 public class LevelGenerator : MonoBehaviour
 {
-    [SerializeField] GridObject[] _templates;
-    [SerializeField] private Transform _player;
-    [SerializeField] private float _viewRadius;
-    [SerializeField] private float _cellSize;
+    [SerializeField] private GroundPool _ground;
+    [SerializeField] private ObstaclePool _obstacles;
+    [SerializeField] private CoinPool _coins;
 
-    private HashSet<Vector3Int> _collisionMatrix = new HashSet<Vector3Int>();
+    [SerializeField] private Transform _player;
+    [SerializeField] private int _width;
+    [SerializeField] private int _length;
+    [SerializeField] private float _generationPauseTime;
+
+    private float _elapsedTime;
+    private int _gridSpacingOffset = 1;
+    private int _generationStart = 0;
+    private int _currentLength;
+
+    private List<GameObject> _placedObjects = new List<GameObject>();
+
+    private void Start()
+    {
+        _currentLength = _length * 2;
+
+        SpawnObjects();
+    }
 
     private void Update()
     {
-        FillRadius(_player.position, _viewRadius);
-    }
+        _elapsedTime += Time.deltaTime;
 
-    private void FillRadius(Vector3 center, float viewRadius)
-    {
-        var cellCountOnAxis = (int)(viewRadius / _cellSize);
-        var fillAreaCenter = WorldToGridPosition(center);
-
-        for (int x = -cellCountOnAxis; x < cellCountOnAxis * 2; x++)
+        if (_elapsedTime >= _generationPauseTime)
         {
-            for (int z = -cellCountOnAxis; z < cellCountOnAxis; z++)
-            {
-                TryCreateRandomObjectOnLayer(GridLayer.Ground, fillAreaCenter + new Vector3Int(x, 0, z));
-                TryCreateRandomObjectOnLayer(GridLayer.OnGround, fillAreaCenter + new Vector3Int(x, 0, z));
-            }
+            SpawnObjects();
+            //DisableObjects();
+
+            _elapsedTime = 0;
         }
     }
 
-    private void TryCreateRandomObjectOnLayer(GridLayer layer, Vector3Int gridPosition)
+    private void SpawnObjects()
     {
-        gridPosition.y = (int)layer;
+        StartCoroutine(TrySpawnObjects());
+    }
 
-        if (_collisionMatrix.Contains(gridPosition))
+    private IEnumerator TrySpawnObjects()
+    {
+        for (int x = _generationStart; x < _currentLength; x++)
         {
+            for (int z = -_width; z < _width; z++)
+            {
+                TryCreateGround(_ground, x, z);
+                TryCreateObjectOnGround(_obstacles, _coins, x, z, _gridSpacingOffset);
+            }
+
+            yield return new WaitForFixedUpdate();
+        }
+
+        _generationStart = _currentLength;
+        _currentLength += _length;
+    }
+
+    private void TryCreateGround(GroundPool pool, int x, int z)
+    {
+        GameObject prefab = pool.TryGetObject();
+
+        if (prefab == null)
+            return;
+
+        prefab.SetActive(true);
+        prefab.transform.position = new Vector3(x * _gridSpacingOffset, 0, z * _gridSpacingOffset);
+        _placedObjects.Add(prefab);
+    }
+
+    private void TryCreateObjectOnGround(ObstaclePool obstacles, CoinPool coins, int x, int z, int verticalOffset)
+    {
+        GameObject obstacle = obstacles.TryGetObject();
+
+        if (obstacle != null)
+        {
+            obstacle.SetActive(true);
+            obstacle.transform.position = new Vector3(x * _gridSpacingOffset, verticalOffset, z * _gridSpacingOffset);
+            _placedObjects.Add(obstacle);
+
             return;
         }
-        else
+
+        GameObject coin = coins.TryGetObject();
+
+        if (coin != null)
         {
-            _collisionMatrix.Add(gridPosition);
+            coin.SetActive(true);
+            coin.transform.position = new Vector3(x * _gridSpacingOffset, verticalOffset, z * _gridSpacingOffset);
+            _placedObjects.Add(coin);
         }
-
-        var template = GetRandomTemplate(layer);
-
-        if (template == null)
-        {
-            return;
-        }
-
-        var poosition = GridToWorldPosition(gridPosition);
-
-        Instantiate(template, poosition, Quaternion.identity, transform);
     }
 
-    private GridObject GetRandomTemplate(GridLayer layer)
+    private void DisableObjects()
     {
-        var variants = _templates.Where(template => template.Layer == layer);
-
-        if (variants.Count() == 1)
+        foreach (var prefab in _placedObjects)
         {
-            return variants.First();
+            if (Vector3.Distance(prefab.transform.position, _player.position) >= _length && prefab.transform.position.x < _player.position.x)
+                prefab.SetActive(false);
         }
-
-        foreach (var template in variants)
-        {
-            if (template.Chance > Random.Range(0, 100))
-            {
-                return template;
-            }
-        }
-
-        return null;
-    }
-
-    private Vector3 GridToWorldPosition(Vector3Int gridPosition)
-    {
-        return new Vector3(
-            gridPosition.x * _cellSize,
-            gridPosition.y * _cellSize,
-            gridPosition.z * _cellSize);
-    }
-
-    private Vector3Int WorldToGridPosition(Vector3 worldPosition)
-    {
-        return new Vector3Int(
-            (int)(worldPosition.x / _cellSize),
-            (int)(worldPosition.y / _cellSize),
-            (int)(worldPosition.z / _cellSize));
     }
 }
