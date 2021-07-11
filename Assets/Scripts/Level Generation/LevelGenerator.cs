@@ -34,7 +34,6 @@ public class LevelGenerator : MonoBehaviour
         if (_elapsedTime >= _generationPauseTime)
         {
             SpawnObjects();
-            //DisableObjects();
 
             _elapsedTime = 0;
         }
@@ -94,15 +93,6 @@ public class LevelGenerator : MonoBehaviour
             coin.SetActive(true);
             coin.transform.position = new Vector3(x * _gridSpacingOffset, verticalOffset, z * _gridSpacingOffset);
             _placedObjects.Add(coin);
-        }
-    }
-
-    private void DisableObjects()
-    {
-        foreach (var prefab in _placedObjects)
-        {
-            if (Vector3.Distance(prefab.transform.position, _player.position) >= _length && prefab.transform.position.x < _player.position.x)
-                prefab.SetActive(false);
         }
     }
 }
