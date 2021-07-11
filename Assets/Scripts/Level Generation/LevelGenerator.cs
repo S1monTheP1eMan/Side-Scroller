@@ -18,8 +18,6 @@ public class LevelGenerator : MonoBehaviour
     private int _generationStart = 0;
     private int _currentLength;
 
-    private List<GameObject> _placedObjects = new List<GameObject>();
-
     private void Start()
     {
         _currentLength = _length * 2;
@@ -70,7 +68,6 @@ public class LevelGenerator : MonoBehaviour
 
         prefab.SetActive(true);
         prefab.transform.position = new Vector3(x * _gridSpacingOffset, 0, z * _gridSpacingOffset);
-        _placedObjects.Add(prefab);
     }
 
     private void TryCreateObjectOnGround(ObstaclePool obstacles, CoinPool coins, int x, int z, int verticalOffset)
@@ -81,7 +78,6 @@ public class LevelGenerator : MonoBehaviour
         {
             obstacle.SetActive(true);
             obstacle.transform.position = new Vector3(x * _gridSpacingOffset, verticalOffset, z * _gridSpacingOffset);
-            _placedObjects.Add(obstacle);
 
             return;
         }
@@ -92,7 +88,6 @@ public class LevelGenerator : MonoBehaviour
         {
             coin.SetActive(true);
             coin.transform.position = new Vector3(x * _gridSpacingOffset, verticalOffset, z * _gridSpacingOffset);
-            _placedObjects.Add(coin);
         }
     }
 }
